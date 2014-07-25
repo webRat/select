@@ -5,9 +5,10 @@ component accessors="true" {
 	property name="select" type="any";
 	property name="from" type="string";
 	property name="innerJoin" type="array";
-	property name="where" type="string";
+	property name="where" type="string" default="";
 	property name="orderBy" type="string";
-	property name="limit" type="string";
+	property name="rowcount" type="numeric";
+	property name="offset" type="numeric";
 	property name="params" type="struct";
 	property name="cachedWithinMinutes" type="numeric";
 	property name="Datasource" type="string";
@@ -18,11 +19,14 @@ component accessors="true" {
 	property name="hasCachedWithinMinutes" type="boolean" default=false;
 	property name="hasParams" type="boolean" default=false;
 	property name="hasLimit" type="boolean" default=false;
+	property name="hasRowcount" type="boolean" default=false;
+	property name="hasOffset" type="boolean" default=false;
 	property name="hasJoins" type="boolean" default=false;
 	property name="hasDatasource" type="boolean" default=false;
 	property name="hasQ" type="boolean" default=false;
 
 	public select function init(){
+		variables.params = {};
 		// If we have arguments, kick off select()
 		if( arrayLen(arguments) ){
 			if( structKeyExists(arguments,'datasource') && len(trim(arguments.datasource)) || structKeyExists(arguments,'dsn') && len(trim(arguments.dsn)) ) withDatasource(dsn=arguments[structKeyExists(arguments,'datasource') ? 'datasource':'dsn']);
@@ -41,11 +45,14 @@ component accessors="true" {
 		setFrom(arguments.table);
 		return this;
 	}
-	public select function innerJoin(required any join){
+	public select function innerJoin(required any join, struct params){
 		var joins = isArray(getInnerJoin()) && arrayLen( getInnerJoin() ) ? getInnerJoin() : [];
 		arrayAppend(joins,arguments.join);
 		setInnerJoin(joins);
 		setHasJoins(true);
+
+		if(structKeyExists(arguments,'params') && !structIsEmpty(arguments.params)) withParams(arguments.params);
+
 		return this;
 	}
 	public select function where(required string statement, struct params){
@@ -58,9 +65,17 @@ component accessors="true" {
 		setHasOrderBy(true);
 		return this;
 	}
-	public select function limit(required numeric x){
-		setLimit(arguments.x);
-		setHasLimit(true);
+	public select function limit(required numeric rowcount=0, required numeric offset=0){
+		if(isNumeric(arguments.rowcount) AND arguments.rowcount > 0){
+			setRowcount(arguments.rowcount);
+			setHasRowcount(true);
+			setHasLimit(true);
+		}
+		if(isNumeric(arguments.offset) AND arguments.offset > 0){
+			setOffset(arguments.offset);
+			setHasOffset(true);
+			setHasLimit(true);
+		}
 		return this;
 	}
 	public select function withDatasource(required string dsn){
@@ -69,8 +84,13 @@ component accessors="true" {
 		return this;	
 	}
 	public select function withParams(required struct params){
-		setParams(arguments.params);
-		setHasParams(true);
+		if(structKeyExists(arguments,'params') && !structIsEmpty(arguments.params)){
+			var pStruct = getParams();
+			if(structIsEmpty(pStruct)) pStruct = {};
+			structAppend(pStruct, arguments.params,'yes');
+			setParams(pStruct);
+			setHasParams(true);
+		}
 		return this;
 	}
 	public select function cacheFor(required numeric minutes){
@@ -93,7 +113,15 @@ component accessors="true" {
 		}
 		if( len(trim( getWhere() )) ) arrayAppend(qArray,"WHERE #getWhere()#");
 		if( getHasOrderBy() ) arrayAppend(qArray,"ORDER BY #getOrderBy()#");
-		if( getHasLimit() ) arrayAppend(qArray,"LIMIT #getLimit()#");
+		if( getHasLimit() ){
+			var _limit = "LIMIT";
+			if(getHasOffset() & getOffset() > 0 ) _limit = _limit & " #getOffset()#";
+			if(getHasRowcount() & getRowcount() > 0 ){
+				if(getHasOffset() & getOffset() > 0 ) _limit = _limit & ",";
+				_limit = _limit & " #getRowcount()#";
+			}
+			arrayAppend(qArray,_limit);
+		}
 
 		var queryArguments = {};
 		queryArguments.sql = trim(arrayToList(qArray,' '));
@@ -141,85 +169,104 @@ component accessors="true" {
 	}
 	private string function mapDBTypeToCFType(required string dbtype)
 	{
-		var toReturn = "";
-
 		switch(lcase(arguments.dbtype))
 		{
 			case 'bigint':
-				toReturn = 'CF_SQL_BIGINT';
+			case 'CF_SQL_BIGINT':			
+				return 'CF_SQL_BIGINT';
 			break;
 			case 'bit':
-				toReturn = 'CF_SQL_BIT';
+			case 'CF_SQL_BIT':
+				return 'CF_SQL_BIT';
 			break;
 			case 'char':
-				toReturn = 'CF_SQL_CHAR';
+			case 'CF_SQL_CHAR':
+				return 'CF_SQL_CHAR';
 			break;
 			case 'blob':
-				toReturn = 'CF_SQL_BLOB';
+			case 'CF_SQL_BLOB':
+				return 'CF_SQL_BLOB';
 			break;
 			case 'clob':
-				toReturn = 'CF_SQL_CLOB';
+			case 'CF_SQL_CLOB':
+				return 'CF_SQL_CLOB';
 			break;
 			case 'date':
-				toReturn = 'CF_SQL_DATE';
+			case 'CF_SQL_DATE':
+				return 'CF_SQL_DATE';
 			break;
 			case 'decimal':
-				toReturn = 'CF_SQL_DECIMAL';
+			case 'CF_SQL_DECIMAL':
+				return 'CF_SQL_DECIMAL';
 			break;
 			case 'double':
-				toReturn = 'CF_SQL_DOUBLE';
+			case 'CF_SQL_DOUBLE':
+				return 'CF_SQL_DOUBLE';
 			break;
 			case 'float':
-				toReturn = 'CF_SQL_FLOAT';
+			case 'CF_SQL_FLOAT':
+				return 'CF_SQL_FLOAT';
 			break;
 			case 'idstamp':
-				toReturn = 'CF_SQL_IDSTAMP';
+			case 'CF_SQL_IDSTAMP':
+				return 'CF_SQL_IDSTAMP';
 			break;
 			case 'int':
 			case 'integer':
-				toReturn = 'CF_SQL_INTEGER';
+			case 'CF_SQL_INTEGER':
+				return 'CF_SQL_INTEGER';
 			break;
 			case 'longvarchar':
-				toReturn = 'CF_SQL_LONGVARCHAR';
+			case 'CF_SQL_LONGVARCHAR':
+				return 'CF_SQL_LONGVARCHAR';
 			break;
+
 			case 'money':
-				toReturn = 'CF_SQL_MONEY';
+			case 'CF_SQL_MONEY':
+				return 'CF_SQL_MONEY';
 			break;
 			case 'money4':
-				toReturn = 'CF_SQL_MONEY4';
+			case 'CF_SQL_MONEY4':
+				return 'CF_SQL_MONEY4';
 			break;
 			case 'number':
 			case 'numeric':
-				toReturn = 'CF_SQL_NUMERIC';
+			case 'CF_SQL_NUMERIC':
+				return 'CF_SQL_NUMERIC';
 			break;
 			case 'real':
-				toReturn = 'CF_SQL_REAL';
+			case 'CF_SQL_REAL':			
+				return 'CF_SQL_REAL';
 			break;
 			case 'refcursor':
-				toReturn = 'CF_SQL_REFCURSOR';
+			case 'CF_SQL_REFCURSOR':
+				return 'CF_SQL_REFCURSOR';
 			break;
 			case 'smallint':
 			case 'smallinteger':
-				toReturn = 'CF_SQL_SMALLINT';
+			case 'CF_SQL_SMALLINT':
+				return 'CF_SQL_SMALLINT';
 			break;
 			case 'time':
-				toReturn = 'CF_SQL_TIME';
+			case 'CF_SQL_TIME':
+				return 'CF_SQL_TIME';
 			break;
 			case 'datetime':
 			case 'timestamp':
-				toReturn = 'CF_SQL_TIMESTAMP';
+			case 'CF_SQL_TIMESTAMP':			
+				return 'CF_SQL_TIMESTAMP';
 			break;
 			case 'tinyint':
-				toReturn = 'CF_SQL_TINYINT';
+			case 'CF_SQL_TINYINT':
+				return 'CF_SQL_TINYINT';
 			break;
 			case 'varchar':
-				toReturn = 'CF_SQL_VARCHAR';
+			case 'CF_SQL_VARCHAR':
+				return 'CF_SQL_VARCHAR';
 			break;
 			default:
-				toReturn = 'CF_SQL_VARCHAR';
+				return 'CF_SQL_VARCHAR';
 			break;
 		}
-
-		return toReturn;
 	}
 }
