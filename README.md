@@ -76,4 +76,4 @@ INNER JOIN support:
 
 Debugging:
 ===========
-	writedump(var=_query.debug(),abort=1);
+	writedump(var=query.debug(),abort=1);
