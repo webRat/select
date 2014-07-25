@@ -27,27 +27,29 @@ Additional usage:
 
 More complex usage:
 ===================
+	variables.filter = "username";
+	variables.value = "webRat";
 	variables.columns = ['array','of','columns'];
 	variables.dbtable = "tablename";
 
 	var _query = select(variables.columns).from(variables.dbtable);
 	var params = {};
 
-	switch(arguments.filter){
+	switch(variables.filter){
 		case "accountGUID":
-			params = { 'create_guid' = { value = arguments.value, type = "char" } };
+			params = { 'create_guid' = { value = variables.value, type = "char" } };
 			_query.where('create_guid = :create_guid AND active = 1 AND deleted = 0',params);
 		break;
 		case 'usernameOrEmail':
-			params = { 'username' = { value = arguments.value, type = "varchar" } };
+			params = { 'username' = { value = variables.value, type = "varchar" } };
 			_query.where('(username = :username OR email = :username) AND active = 1 AND deleted = 0',params);
 		break;
 		case "username":
-			params = { 'username' = { value = arguments.value, type = "varchar" } };
+			params = { 'username' = { value = variables.value, type = "varchar" } };
 			_query.where('username = :username AND active = 1 AND deleted = 0',params);
 		break;
 		default:
-			params = { 'account_id' = { value = arguments.id, type = "int" } };
+			params = { 'account_id' = { value = variables.id, type = "int" } };
 			_query.where('account_id = :account_id and deleted = 0',params);
 		break;
 	}
