@@ -78,6 +78,15 @@ component accessors="true" {
 		}
 		return this;
 	}
+	public select function offset(required numeric offset=0){
+		if(isNumeric(arguments.offset) AND arguments.offset > 0){
+			setOffset(arguments.offset);
+			setHasOffset(true);
+			// Just using offset alone should not trigger a limit.
+			//setHasLimit(true);
+		}
+		return this;
+	}
 	public select function withDatasource(required string dsn){
 		setDatasource(arguments.dsn);
 		setHasDatasource(true);
@@ -114,12 +123,9 @@ component accessors="true" {
 		if( len(trim( getWhere() )) ) arrayAppend(qArray,"WHERE #getWhere()#");
 		if( getHasOrderBy() ) arrayAppend(qArray,"ORDER BY #getOrderBy()#");
 		if( getHasLimit() ){
-			var _limit = "LIMIT";
-			if(getHasOffset() & getOffset() > 0 ) _limit = _limit & " #getOffset()#";
-			if(getHasRowcount() & getRowcount() > 0 ){
-				if(getHasOffset() & getOffset() > 0 ) _limit = _limit & ",";
-				_limit = _limit & " #getRowcount()#";
-			}
+			var _limit = "LIMIT ";
+			if( getHasRowcount() & getRowcount() > 0 ) _limit = _limit & getRowcount();
+			if( getHasOffset() & getOffset() > 0 ) _limit = _limit & " OFFSET #getOffset()#";
 			arrayAppend(qArray,_limit);
 		}
 

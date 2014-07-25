@@ -60,8 +60,8 @@ Sample Filtering System Possibility:
 	}
 	writedump(var= _query.execute(), abort=1);
 
-INNER JOIN support:
-===================
+INNER JOIN support / LIMIT Example:
+===================================
 	params = {
 		'account_guid' = { value = '8D02BF30-8779-4DA1-8614-A6BD58C41D38', type = "char" }
 	};
@@ -70,6 +70,17 @@ INNER JOIN support:
 		.from('account AS a')
 		.innerJoin('token AS t ON t.account_guid = a.create_guid AND t.account_guid = :account_guid',params)
 		.limit(20,2)
+		.withDatasource('metapose');
+
+	writedump(var=query.execute(),abort=1);
+
+LIMIT 2nd EXAMPLE / Offset:
+===========================
+	query = new select('t.*')
+		.from('account AS a')
+		.innerJoin('token AS t ON t.account_guid = a.create_guid AND t.account_guid = :account_guid',params)
+		.limit(10)
+		.offset(2)
 		.withDatasource('metapose');
 
 	writedump(var=query.execute(),abort=1);
