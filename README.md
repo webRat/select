@@ -30,8 +30,8 @@ Additional usage:
 	variables.result = new select('id').from('tablename').where('id = :id',variables.param).execute();
 	writedump(var=variables.result,abort=1);
 
-More complex usage with filtering system:
-=========================================
+Sample Filtering System Possibility:
+====================================
 	variables.filter = "username";
 	variables.value = "webRat";
 	variables.columns = ['array','of','columns'];
