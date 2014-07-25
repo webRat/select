@@ -15,29 +15,19 @@ Use at your own risk. Apache 2 license.
 Basic Usage:
 ============
 	{{ assuming you have this.datasource in your Application.cfc }}
-	variables.select = new select();
-	variables.result = select('id').from('tablename').orderBy('id').execute();
+	variables.result = new select('*').from('token').execute();
 	writedump(var=variables.result,abort=1);
 
-With Datasource Usage Example 1:
+With Datasource Usage Example:
 ================================
 	variables.datasource = "whatever";
-	variables.select = new select().withDatasource(variables.datasource);
-	variables.result = select('id').from('tablename').orderBy('id').execute();
-	writedump(var=variables.result,abort=1);
-
-With Datasource Usage Example 2:
-================================
-	variables.datasource = "whatever";
-	variables.select = new select();
-	variables.result = select('id').from('tablename').orderBy('id').withDatasource(variables.datasource).execute();
+	variables.result = new select('*').from('token').withDatasource(variables.datasource).execute();
 	writedump(var=variables.result,abort=1);
 
 Additional usage:
 =================
-	variables.select = new select();
-	var params = { 'id' = { value=5, type="int" }};
-	variables.result = select('id').from('tablename').where('id = :id',params).execute();
+	variables.params = { 'id' = { value=5, type="int" }};
+	variables.result = new select('id').from('tablename').where('id = :id',variables.param).execute();
 	writedump(var=variables.result,abort=1);
 
 More complex usage with filtering system:
