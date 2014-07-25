@@ -60,6 +60,20 @@ More complex usage with filtering system:
 	}
 	writedump(var= _query.execute(), abort=1);
 
+INNER JOIN support:
+===================
+	params = {
+		'account_guid' = { value = '8D02BF30-8779-4DA1-8614-A6BD58C41D38', type = "char" }
+	};
+
+	query = new select('t.*')
+		.from('account AS a')
+		.innerJoin('token AS t ON t.account_guid = a.create_guid AND t.account_guid = :account_guid',params)
+		.limit(20,2)
+		.withDatasource('metapose');
+
+	writedump(var=query.execute(),abort=1);
+
 Debugging:
 ===========
 	writedump(var=_query.debug(),abort=1);
