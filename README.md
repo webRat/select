@@ -40,14 +40,14 @@ Additional usage:
 	variables.result = select('id').from('tablename').where('id = :id',params).execute();
 	writedump(var=variables.result,abort=1);
 
-More complex usage:
-===================
+More complex usage with filtering system:
+=========================================
 	variables.filter = "username";
 	variables.value = "webRat";
 	variables.columns = ['array','of','columns'];
 	variables.dbtable = "tablename";
 
-	var _query = select(variables.columns).from(variables.dbtable);
+	var _query = new select(variables.columns).from(variables.dbtable);
 	var params = {};
 
 	switch(variables.filter){
@@ -72,4 +72,4 @@ More complex usage:
 
 Debugging:
 ===========
-writedump(var=_query.debug(),abort=1);
+	writedump(var=_query.debug(),abort=1);
