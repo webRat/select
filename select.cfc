@@ -8,7 +8,7 @@ component accessors="true" {
 	property name="where" type="string" default="";
 	property name="orderBy" type="string";
 	property name="rowcount" type="numeric";
-	property name="offset" type="numeric";
+	property name="offset" type="numeric" default="0";
 	property name="params" type="struct";
 	property name="cachedWithinMinutes" type="numeric";
 	property name="Datasource" type="string";
